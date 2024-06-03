@@ -45,9 +45,18 @@ class ChatServer:
         finally:
             with self.lock:
                 client_socket.close()
-                del self.clients[addr]
+                if addr in self.clients:
+                    del self.clients[addr]
                 self.public_keys.pop(addr, None)
-            print(f"Connection with {addr} closed.")
+                print(f"Connection with {addr} closed.")
+
+                # Close the remaining client if there is any
+                if self.clients:
+                    print("A client disconnected, closing the remaining client.")
+                    for client in list(self.clients.values()):
+                        client.close()
+                    self.clients.clear()
+                    self.public_keys.clear()
 
     def close_all_connections(self):
         with self.lock:
