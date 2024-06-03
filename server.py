@@ -1,4 +1,3 @@
-# server.py
 import socket
 import threading
 
@@ -46,10 +45,15 @@ class ChatServer:
     def start(self):
         print("Server started...")
         while True:
-            client_socket, addr = self.server.accept()
-            self.clients[addr] = client_socket
-            print(f"Connection from {addr}")
-            threading.Thread(target=self.handle_client, args=(client_socket, addr), daemon=True).start()
+            if len(self.clients) < 3:
+                client_socket, addr = self.server.accept()
+                self.clients[addr] = client_socket
+                print(f"Connection from {addr}")
+                threading.Thread(target=self.handle_client, args=(client_socket, addr), daemon=True).start()
+            else:
+                print("Connection attempt rejected: maximum number of clients connected.")
+                self.close_all_connections()
+
 
 if __name__ == "__main__":
     server = ChatServer()
