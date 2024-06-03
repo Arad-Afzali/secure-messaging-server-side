@@ -8,47 +8,48 @@ class ChatServer:
         self.server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.server.bind((host, port))
         self.server.listen(5)
-        self.clients = []
+        self.clients = {}
+        self.public_keys = {}
 
-    def broadcast(self, message, client_socket):
-        for client in self.clients:
-            if client != client_socket:
-                try:
-                    client.sendall(message)
-                except Exception as e:
-                    print(f"Error broadcasting message: {e}")
-                    client.close()
-                    self.clients.remove(client)
-
-    def handle_client(self, client_socket):
+    def handle_client(self, client_socket, addr):
         try:
-            # Exchange public keys
-            peer_public_key = client_socket.recv(4096)
-            print(f"Received public key from client: {peer_public_key[:30]}...")
-            for client in self.clients:
-                if client != client_socket:
-                    client.sendall(peer_public_key)
-
-            self.clients.append(client_socket)
-
             while True:
                 message = client_socket.recv(4096)
                 if not message:
                     break
-                print(f"Received message from client: {message[:30]}...")
-                self.broadcast(message, client_socket)
+
+                if message.startswith(b'KEY:'):
+                    # Store the client's public key
+                    self.public_keys[addr] = message[4:]
+                    print(f"Received public key from {addr}: {message[4:30]}...")
+
+                elif message == b'REQ_KEY':
+                    # Send the other client's public key
+                    peer_addr = next(addr for addr in self.public_keys if addr != client_socket.getpeername())
+                    peer_public_key = self.public_keys[peer_addr]
+                    client_socket.sendall(peer_public_key)
+                    print(f"Sent public key to {addr}: {peer_public_key[:30]}...")
+
+                else:
+                    # Broadcast the encrypted message to all clients except the sender
+                    for client in self.clients.values():
+                        if client != client_socket:
+                            client.sendall(message)
+                            print(f"Broadcasting message to {client.getpeername()}: {message[:30]}...")
+
         except Exception as e:
-            print(f"Error handling client: {e}")
+            print(f"Error handling client {addr}: {e}")
         finally:
             client_socket.close()
-            self.clients.remove(client_socket)
+            del self.clients[addr]
 
     def start(self):
         print("Server started...")
         while True:
             client_socket, addr = self.server.accept()
+            self.clients[addr] = client_socket
             print(f"Connection from {addr}")
-            threading.Thread(target=self.handle_client, args=(client_socket,), daemon=True).start()
+            threading.Thread(target=self.handle_client, args=(client_socket, addr), daemon=True).start()
 
 if __name__ == "__main__":
     server = ChatServer()
