@@ -24,10 +24,13 @@ class ChatServer:
 
                 elif message == b'REQ_KEY':
                     # Send the other client's public key
-                    peer_addr = next(addr for addr in self.public_keys if addr != client_socket.getpeername())
-                    peer_public_key = self.public_keys[peer_addr]
-                    client_socket.sendall(peer_public_key)
-                    print(f"Sent public key to {addr}: {peer_public_key[:30]}...")
+                    peer_addr = next((a for a in self.public_keys if a != client_socket.getpeername()), None)
+                    if peer_addr:
+                        peer_public_key = self.public_keys.pop(peer_addr)  # Remove the key immediately after sending
+                        client_socket.sendall(peer_public_key)
+                        print(f"Sent and removed public key of {peer_addr} to {addr}: {peer_public_key[:30]}...")
+                    else:
+                        print(f"No public key available to send to {addr}")
 
                 else:
                     # Broadcast the encrypted message to all clients except the sender
@@ -41,6 +44,14 @@ class ChatServer:
         finally:
             client_socket.close()
             del self.clients[addr]
+            self.public_keys.pop(addr, None)  # Ensure the key is removed if the client disconnects
+
+    def close_all_connections(self):
+        for client_socket in self.clients.values():
+            client_socket.close()
+        self.clients.clear()
+        self.public_keys.clear()
+        print("All connections closed.")
 
     def start(self):
         print("Server started...")
@@ -51,9 +62,8 @@ class ChatServer:
                 print(f"Connection from {addr}")
                 threading.Thread(target=self.handle_client, args=(client_socket, addr), daemon=True).start()
             else:
-                print("Connection attempt rejected: maximum number of clients connected.")
+                print("Maximum number of clients connected. Closing all connections.")
                 self.close_all_connections()
-
 
 if __name__ == "__main__":
     server = ChatServer()
