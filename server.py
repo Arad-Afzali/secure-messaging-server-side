@@ -40,23 +40,26 @@ class ChatServer:
                                 client.sendall(message)
                                 print(f"Broadcasting message to {client.getpeername()}: {message[:30]}...")
 
-        except Exception as e:
-            print(f"Error handling client {addr}: {e}")
+        except socket.error as e:
+            if e.errno == 9:  # Bad file descriptor
+                print(f"Client {addr} disconnected.")
+            else:
+                print(f"Error handling client {addr}: {e}")
         finally:
             with self.lock:
                 client_socket.close()
                 if addr in self.clients:
                     del self.clients[addr]
                 self.public_keys.pop(addr, None)
-                print(f"Connection with {addr} closed.")
+            print(f"Connection with {addr} closed.")
 
-                # Close the remaining client if there is any
-                if self.clients:
-                    print("A client disconnected, closing the remaining client.")
-                    for client in list(self.clients.values()):
-                        client.close()
-                    self.clients.clear()
-                    self.public_keys.clear()
+            # Close the remaining client if there is any
+            if self.clients:
+                print("A client disconnected, closing the remaining client.")
+                for client in list(self.clients.values()):
+                    client.close()
+                self.clients.clear()
+                self.public_keys.clear()
 
     def close_all_connections(self):
         with self.lock:
