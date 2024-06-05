@@ -1,4 +1,3 @@
-# server.py
 import socket
 import threading
 
@@ -20,6 +19,10 @@ class ChatServer:
         while True:
             client_socket, client_address = self.server_socket.accept()
             print(f"New connection from {client_address}")
+            if len(self.clients) >= 3:
+                print("Too many clients connected. Disconnecting all clients.")
+                self.disconnect_all_clients()
+                continue
             threading.Thread(target=self.handle_client, args=(client_socket,)).start()
 
     def handle_client(self, client_socket):
@@ -49,8 +52,12 @@ class ChatServer:
                 try:
                     other_client_socket.sendall(f"PEER_PUBLIC_KEY:{self.public_keys[client_id]}".encode('utf-8'))
                     client_socket.sendall(f"PEER_PUBLIC_KEY:{self.public_keys[other_client_id]}".encode('utf-8'))
+                    # Delete the public keys after broadcasting
+                    self.public_keys.clear()
                 except Exception as e:
                     print(f"Error broadcasting public key: {e}")
+
+
 
     def route_message(self, sender_id, message):
         for client_id, client_socket in self.clients.items():
@@ -75,9 +82,20 @@ class ChatServer:
             except Exception as e:
                 print(f"Error notifying disconnection: {e}")
 
+    def disconnect_all_clients(self):
+        for client_socket in list(self.clients.values()):
+            try:
+                client_socket.sendall("DISCONNECT".encode('utf-8'))
+                client_socket.close()
+            except Exception as e:
+                print(f"Error disconnecting client: {e}")
+        self.clients.clear()
+        self.public_keys.clear()
+        print("All clients have been disconnected. Waiting for new connections...")
+
 def main():
     host = '192.168.1.204'
-    port = 7001
+    port = 7002
     server = ChatServer(host, port)
     server.start_server()
 
