@@ -85,7 +85,9 @@ class ChatServer:
             del self.clients[client_id]
         if client_id in self.public_keys:
             del self.public_keys[client_id]
-        self.notify_disconnection(client_id)
+
+        # If any client disconnects, disconnect all clients
+        self.disconnect_all_clients()
 
     def notify_disconnection(self, client_id):
         for client_socket in list(self.clients.values()):
@@ -107,7 +109,7 @@ class ChatServer:
 
 def main():
     host = '192.168.1.204'
-    port = 7003
+    port = 7004
     server = ChatServer(host, port)
     server.start_server()
 
