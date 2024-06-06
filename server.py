@@ -1,3 +1,4 @@
+import ssl
 import socket
 import threading
 
@@ -12,6 +13,10 @@ class ChatServer:
         self.running = True
         self.lock = threading.Lock()  # For thread-safe access to shared resources
 
+        # Load server certificate and key
+        self.context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        self.context.load_cert_chain(certfile='server.crt', keyfile='server.key')
+        # -------
     def start_server(self):
         self.server_socket.bind((self.host, self.port))
         self.server_socket.listen(5)
@@ -28,6 +33,11 @@ class ChatServer:
             try:
                 client_socket, client_address = self.server_socket.accept()
                 print(f"New connection from {client_address}")
+
+                # Wrap client socket with SSL/TLS
+                client_socket = self.context.wrap_socket(client_socket, server_side=True)
+                # --------
+
                 if len(self.clients) >= 2:
                     print("Too many clients connected. Disconnecting all clients.")
                     self.disconnect_all_clients()
