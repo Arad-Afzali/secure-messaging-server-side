@@ -69,6 +69,9 @@ Please follow the installation and usage instructions in the client application'
     python3 server.py
     ```
 
+### Note
+    You should change the IP address and port in the server.py. The default IP address in 127.0.0.1 and the default port is 7004.
+
 2. **Connect clients to the server using the client application.**
 
     
