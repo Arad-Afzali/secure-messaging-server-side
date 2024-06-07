@@ -2,6 +2,15 @@
 
 This is a simple secure chat server implemented in Python. It allows two clients to connect, exchange public keys for secure communication, and send messages to each other. 
 
+## Client Application
+
+The client application is necessary to connect to this secure chat server. You can find the client application repository and instructions on how to set it up below:
+
+https://github.com/Arad-Afzali/secure-messaging-client-side
+
+Please follow the installation and usage instructions in the client application's README to ensure proper communication with the server.
+
+
 ## Features
 
 - Supports two clients.
