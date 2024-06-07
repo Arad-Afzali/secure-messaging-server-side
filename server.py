@@ -1,3 +1,4 @@
+import ssl
 import socket
 import threading
 
@@ -10,7 +11,15 @@ class ChatServer:
         self.clients = {}
         self.public_keys = {}
         self.running = True
-        self.lock = threading.Lock()  # For thread-safe access to shared resources
+        self.lock = threading.Lock()
+
+# Uncomment here for SSL/TLS certificate---------------------
+
+        # self.context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        # self.context.load_cert_chain(certfile='server.crt', keyfile='server.key')
+
+# ------------------------------------------------------------
+
 
     def start_server(self):
         self.server_socket.bind((self.host, self.port))
@@ -28,6 +37,13 @@ class ChatServer:
             try:
                 client_socket, client_address = self.server_socket.accept()
                 print(f"New connection from {client_address}")
+
+# Uncomment here for SSL/TLS certificate---------------------
+
+                # client_socket = self.context.wrap_socket(client_socket, server_side=True)
+
+# ------------------------------------------------------------
+
                 if len(self.clients) >= 2:
                     print("Too many clients connected. Disconnecting all clients.")
                     self.disconnect_all_clients()
@@ -136,7 +152,7 @@ class ChatServer:
             print(f"Error closing server socket: {e}")
 
 def main():
-    host = '192.168.1.204'
+    host = '127.0.0.1'
     port = 7004
     server = ChatServer(host, port)
     server.start_server()
