@@ -12,18 +12,29 @@ This is a simple secure chat server implemented in Python. It allows two clients
 ## Requirements
 
 - Python 3.x
-- `openssl` (for SSL/TLS support, optional)
+- `openssl` (for SSL/TLS support, Optional but Recommended)
 
 ## Installation
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/chat-server.git
-cd chat-server
+git clone https://github.com/Arad-Afzali/secure-messaging-server-side.git
+cd secure-messaging-server-side
 ```
 
-2. (Optional but Recommended) Generate SSL/TLS certificates.
+2. (Optional but Recommended) Generate SSL/TLS certificates:
+
+```bash
+# Generate a new RSA private key
+openssl genrsa -out server.key 4096
+
+# Generate a Certificate Signing Request (CSR)
+openssl req -new -key server.key -out server.csr
+
+# Generate a self-signed SSL certificate
+openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
+```
 
 ## Usage
 
@@ -35,9 +46,10 @@ python3 server.py
 
 2. Connect clients to the server using a the client application.
 
-3. SSL/TLS Support (Optional but Recommended)
+### Note
+SSL/TLS Support (Optional but Recommended)
 
-To enable SSL/TLS support, uncomment the relevant sections in the ChatServer class and provide the paths to your certificate and key files:
+To enable SSL/TLS support, first you should uncomment the relevant sections in the ChatServer class and provide the paths to your certificate and key files:
 
 ```bash
 #uncomment these sections in the code:
