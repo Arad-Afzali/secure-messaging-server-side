@@ -4,9 +4,9 @@ This is a simple secure chat server implemented in Python. It allows two clients
 
 ## Features
 
-- Supports up to two clients.
-- Exchanges public keys for secure communication.
-- Routes messages between clients.
+- Supports two clients.
+- Exchanges public keys for secure communication and removes them immediately when they are not needed.
+- Routes messages between clients (note: the server does not have access to the messages as they are encrypted by the clients).
 - Disconnects all clients when more than two clients attempt to connect.
 
 ## Requirements
