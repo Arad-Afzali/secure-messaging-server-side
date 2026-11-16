@@ -13,15 +13,17 @@ Please follow the installation and usage instructions in the client application'
 
 ## Features
 
-- Supports two clients.
-- Exchanges public keys for secure communication and removes them immediately when they are not needed.
-- Routes messages between clients (note: the server does not have access to the messages as they are encrypted by the clients).
-- Disconnects all clients when more than two clients attempt to connect.
+- Two clients per chat. A third client is turned away and the chat already running is not affected.
+- Passes the clients' public keys to each other and forwards their messages. Messages are end-to-end encrypted (AES-256-GCM over an X25519 key exchange), so the server cannot read them.
+- If the server swapped the keys, the safety code the two users compare would not match, so a dishonest server gets caught.
+- Optional TLS with `--cert` and `--key`.
+- Every message is length-prefixed (`protocol.py`), so messages are never split or merged.
 
 ## Requirements
 
 - Python 3.x
-- `openssl` (for SSL/TLS support, Optional but Recommended)
+- `openssl` (for TLS, recommended)
+- No Python packages: the server only uses the standard library
 
 ## Installation
 
@@ -32,46 +34,23 @@ Please follow the installation and usage instructions in the client application'
     cd secure-messaging-server-side
     ```
 
-### Note (Optional but Recommended Steps)
-
-2. **Generate SSL/TLS certificates**:
+2. **Make a TLS certificate** (recommended):
 
     ```bash
-    # Generate a new RSA private key
-    openssl genrsa -out server.key 4096
-
-    # Generate a Certificate Signing Request (CSR)
-    openssl req -new -key server.key -out server.csr
-
-    # Generate a self-signed SSL certificate
-    openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
+    ./make_cert.sh
     ```
-3. **SSL/TLS Support**
 
-    To enable SSL/TLS support, first you should uncomment the relevant sections in the ChatServer class and provide the paths to your certificate and key files:
+    This makes `server.crt` and `server.key` for `127.0.0.1`. Give `server.crt` to the clients and keep `server.key` private. For a real server, change the IP or domain inside the script, or use a certificate from Let's Encrypt.
 
-    ```bash
-    #uncomment these sections in the code:
-
-    self.context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    self.context.load_cert_chain(certfile='server.crt', keyfile='server.key')
-
-    #---------
-
-    client_socket = self.context.wrap_socket(client_socket, server_side=True)
-
-    ```
 ## Usage
 
 1. **Start the server**:
 
     ```bash
-    python3 server.py
+    python3 server.py --host 127.0.0.1 --port 7004 --cert server.crt --key server.key
     ```
 
-    ### Note
-    
-    You should change the IP address and port in the server.py. The default IP address in 127.0.0.1 and the default port is 7004.
+    Without `--cert` and `--key` the server runs without TLS. The defaults are `127.0.0.1` and port `7004`.
 
 2. **Connect clients to the server using the client application.**
 
