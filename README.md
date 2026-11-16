@@ -1,6 +1,10 @@
 # Secure Chat Server
 
-This is a simple secure chat server implemented in Python. It allows two clients to connect, exchange public keys for secure communication, and send messages to each other. 
+A small relay server for a two-person, end-to-end encrypted chat, written in Python with only the standard library. It lets two clients connect, passes their public keys to each other and forwards their messages. It cannot read the messages: they are encrypted on one client and only decrypted on the other.
+
+![Two clients chatting through the server over TLS](screenshots/chat.png)
+
+*Two clients chatting through this server over TLS. The matching safety codes show the server did not swap their keys.*
 
 ## Client Application
 
@@ -53,6 +57,19 @@ Please follow the installation and usage instructions in the client application'
     Without `--cert` and `--key` the server runs without TLS. The defaults are `127.0.0.1` and port `7004`.
 
 2. **Connect clients to the server using the client application.**
+
+    The server prints what happens, for example:
+
+    ```text
+    Server started on 127.0.0.1:7004 (TLS)
+    New connection from ('127.0.0.1', 51359)
+    New connection from ('127.0.0.1', 51360)
+    Client ('127.0.0.1', 51359) disconnected
+    Client ('127.0.0.1', 51360) disconnected
+    All clients have been disconnected. Waiting for new connections...
+    ```
+
+    When one client leaves, the other is disconnected too, and the server waits for a new pair.
 
     
 ## Contributing

@@ -13,7 +13,7 @@ class ChatServer:
         self.clients = {}
         self.public_keys = {}
         self.running = True
-        self.lock = threading.Lock()
+        self.lock = threading.RLock()  # RLock: route_message calls remove_client while holding it
 
         # TLS is used when a certificate is given (see make_cert.sh)
         self.context = None
@@ -148,6 +148,8 @@ class ChatServer:
 
     def disconnect_all_clients(self):
         with self.lock:
+            if not self.clients:
+                return  # already done by the other client's thread
             for client_socket in list(self.clients.values()):
                 try:
                     send_msg(client_socket, "DISCONNECT")
